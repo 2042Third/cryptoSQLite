@@ -24,7 +24,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/external/securememory
 
 # add sqlite amalgamation subdirectory and tests
 add_subdirectory(sqlite)
-add_subdirectory(test)
+#add_subdirectory(test)
 
 if (NOT TARGET SecureMemory)
     add_subdirectory(external/securememory)
@@ -47,11 +47,6 @@ set_target_properties(cryptosqlite PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUI
 # compile options
 target_compile_options(cryptosqlite PRIVATE
     -Wall
-    -Wextra
-    -Wno-sign-compare
-    -Wno-unused-parameter
-    -Wno-implicit-fallthrough
-    -Wno-unused-function
     )
 
 # link options
@@ -62,55 +57,55 @@ endif()
 
 # add compile definitions to match this specific use case
 target_compile_definitions(cryptosqlite PUBLIC
-        # Serialized -> free to use same connection/statement in different threads
-        -DSQLITE_THREADSAFE=1
-        # No need for another memory watcher
-        -DSQLITE_DEFAULT_MEMSTATUS=0
-        # Always use memory for temporary files
-        -DSQLITE_TEMP_STORE=3
-        # Use the new write ahead logging
-        -DSQLITE_DEFAULT_WAL_SYNCHRONOUS=1
-        # Do not allow searching in BLOBs by using LIKE or GLOB.
-        -DSQLITE_LIKE_DOESNT_MATCH_BLOBS=1
-        # We don't need checking the depth of the expression tree as queries won't be that complex.
-        -DSQLITE_MAX_EXPR_DEPTH=0
-        # Do not use any deprecated features as deprecated is not so good.
-        -DSQLITE_OMIT_DEPRECATED=1
-        # Since we are using sqlite async, we do not need this
-        -DSQLITE_OMIT_PROGRESS_CALLBACK=1
-        # Using this is supported on all platforms we care about and improves VFS performance
-        -DHAVE_FDATASYNC
-        # Use perfomant isnan system version
-        -DHAVE_ISNAN
-        # Use interface to get malloc available size
-        -DHAVE_MALLOC_USABLE_SIZE
-        # Readable and writeable by user only
-        -DSQLITE_DEFAULT_FILE_PERMISSIONS=0600
-        # Hardening always makes sense.
-        -DSQLITE_ENABLE_API_ARMOR
-        # Full text search
-        -DSQLITE_ENABLE_FTS4
-        -DSQLITE_ENABLE_FTS5
-        # Unicode support for strings in comparators
-        -DSQLITE_ENABLE_ICU
-        # Enable JSON extension support
-        -DSQLITE_ENABLE_JSON1
-        )
+    # Serialized -> free to use same connection/statement in different threads
+    -DSQLITE_THREADSAFE=1
+    # No need for another memory watcher
+    -DSQLITE_DEFAULT_MEMSTATUS=0
+    # Always use memory for temporary files
+    -DSQLITE_TEMP_STORE=3
+    # Use the new write ahead logging
+    -DSQLITE_DEFAULT_WAL_SYNCHRONOUS=1
+    # Do not allow searching in BLOBs by using LIKE or GLOB.
+    -DSQLITE_LIKE_DOESNT_MATCH_BLOBS=1
+    # We don't need checking the depth of the expression tree as queries won't be that complex.
+    -DSQLITE_MAX_EXPR_DEPTH=0
+    # Do not use any deprecated features as deprecated is not so good.
+    -DSQLITE_OMIT_DEPRECATED=1
+    # Since we are using sqlite async, we do not need this
+    -DSQLITE_OMIT_PROGRESS_CALLBACK=1
+    # Using this is supported on all platforms we care about and improves VFS performance
+    -DHAVE_FDATASYNC
+    # Use perfomant isnan system version
+    -DHAVE_ISNAN
+    # Use interface to get malloc available size
+    -DHAVE_MALLOC_USABLE_SIZE
+    # Readable and writeable by user only
+    -DSQLITE_DEFAULT_FILE_PERMISSIONS=0600
+    # Hardening always makes sense.
+    -DSQLITE_ENABLE_API_ARMOR
+    # Full text search
+    -DSQLITE_ENABLE_FTS4
+    -DSQLITE_ENABLE_FTS5
+    # Unicode support for strings in comparators
+    #        -DSQLITE_ENABLE_ICU
+    # Enable JSON extension support
+    -DSQLITE_ENABLE_JSON1
+    )
 
 if (WIN32)
     target_compile_definitions(cryptosqlite PUBLIC
-            # Required due to unix having 8-byte boundaries.
-            -DSQLITE_4_BYTE_ALIGNED_MALLOC=1
-            )
+        # Required due to unix having 8-byte boundaries.
+        -DSQLITE_4_BYTE_ALIGNED_MALLOC=1
+        )
 else()
     target_compile_definitions(cryptosqlite PUBLIC
-            # Use threadsafe localtime
-            -DHAVE_LOCALTIME_R
-            )
+        # Use threadsafe localtime
+        -DHAVE_LOCALTIME_R
+        )
 endif()
 
 # export includes to other targets
 target_include_directories(cryptosqlite PUBLIC
-        ${SQLITE_INCLUDES}
-        ${CMAKE_CURRENT_SOURCE_DIR}/include/
-        )
+    ${SQLITE_INCLUDES}
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/
+    )
