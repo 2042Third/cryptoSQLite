@@ -30,9 +30,9 @@ if (NOT TARGET SecureMemory)
     add_subdirectory(external/securememory)
 endif()
 
-if (NOT TARGET icu)
-    add_subdirectory(external/icu-cmake)
-endif()
+#if (NOT TARGET icu)
+#    add_subdirectory(external/icu-cmake)
+#endif()
 
 # glob files
 file(GLOB_RECURSE CS_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}/include/*)
@@ -50,7 +50,7 @@ target_compile_options(cryptosqlite PRIVATE
     )
 
 # link options
-target_link_libraries(cryptosqlite SecureMemory icu)
+target_link_libraries(cryptosqlite SecureMemory )
 if (NOT WIN32)
     target_link_libraries(cryptosqlite dl)
 endif()
