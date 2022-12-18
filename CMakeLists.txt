@@ -26,10 +26,8 @@ project(cryptoSQLite)
 add_subdirectory(sqlite)
 #add_subdirectory(test)
 
-if (NOT TARGET SecureMemory)
-    # Get definitions of "SecureMemoryLib" and "SecureMemoryInclude"
-    add_subdirectory(external/securememory_bin)
-endif()
+# Get definitions of "SecureMemoryLib" and "SecureMemoryInclude"
+add_subdirectory(external/securememory_bin)
 
 #if (NOT TARGET icu)
 #    add_subdirectory(external/icu-cmake)
