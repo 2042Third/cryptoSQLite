@@ -20,14 +20,15 @@ cmake_minimum_required(VERSION 3.1)
 project(cryptoSQLite)
 
 # set cmake module path
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/external/securememory/cmake-modules")
+#list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/external/securememory/cmake-modules")
 
 # add sqlite amalgamation subdirectory and tests
 add_subdirectory(sqlite)
 #add_subdirectory(test)
 
 if (NOT TARGET SecureMemory)
-    add_subdirectory(external/securememory)
+    # Get definitions of "SecureMemoryLib" and "SecureMemoryInclude"
+    add_subdirectory(external/securememory_bin)
 endif()
 
 #if (NOT TARGET icu)
@@ -45,12 +46,14 @@ add_library(cryptosqlite STATIC ${CS_INCLUDES} ${CS_SOURCES})
 set_target_properties(cryptosqlite PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
 
 # compile options
-target_compile_options(cryptosqlite PRIVATE
-    -Wall
-    )
+target_compile_options(cryptosqlite PRIVATE -Wall)
 
 # link options
-target_link_libraries(cryptosqlite SecureMemory )
+if(WIN32)
+    target_link_libraries(cryptosqlite ${SecureMemoryLib} ws2_32)
+else ()
+    target_link_libraries(cryptosqlite ${SecureMemoryLib} )
+endif()
 if (NOT WIN32)
     target_link_libraries(cryptosqlite dl)
 endif()
@@ -106,6 +109,7 @@ endif()
 
 # export includes to other targets
 target_include_directories(cryptosqlite PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/external/securememory_bin/include
     ${SQLITE_INCLUDES}
     ${CMAKE_CURRENT_SOURCE_DIR}/include/
     )

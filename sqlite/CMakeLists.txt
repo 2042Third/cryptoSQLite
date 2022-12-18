@@ -16,7 +16,8 @@
 # along with cryptoSQLite.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-include(ApplyPatches)
+# Removed after static bin of securememory
+#include(ApplyPatches)
 
 # set up cache variables
 set(SQLITE_BUILD_VERSION "3390400" CACHE STRING "SQLite version string as used in the URL")
