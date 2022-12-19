@@ -77,7 +77,7 @@ public:
 namespace {
     #define FILE_REAL(x) reinterpret_cast<File *>(x)->mUnderlying
     #define FILE_FORWARD(f, fn, ...) FILE_REAL(f)->pMethods->fn(FILE_REAL(f), ## __VA_ARGS__)
-    #define FILE_INTERCEPT(f, fn, x...) reinterpret_cast<File *>(f)->fn(x)
+    #define FILE_INTERCEPT(f, fn, x ...) reinterpret_cast<File *>(f)->fn(x)
 
     int sIoClose(sqlite3_file* pFile) {
         return FILE_INTERCEPT(pFile, close);
