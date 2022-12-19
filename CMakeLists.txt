@@ -26,8 +26,8 @@ project(cryptoSQLite)
 add_subdirectory(sqlite)
 #add_subdirectory(test)
 
-# Get definitions of "SecureMemoryLib" and "SecureMemoryInclude"
-add_subdirectory(external/securememory_bin)
+# Get definitions of "SECUREMEM_LIB" and "SecureMemoryInclude"
+#add_subdirectory(external/securememory_bin)
 
 #if (NOT TARGET icu)
 #    add_subdirectory(external/icu-cmake)
@@ -38,7 +38,13 @@ file(GLOB_RECURSE CS_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}/include/*)
 file(GLOB_RECURSE CS_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/*)
 
 # set up library target
-add_library(cryptosqlite STATIC ${CS_INCLUDES} ${CS_SOURCES})
+add_library(cryptosqlite STATIC ${CS_INCLUDES} ${CS_SOURCES}
+    ${CMAKE_CURRENT_SOURCE_DIR}/external/securememory_bin/bin/libSecureMemory.a
+    )
+
+# add static library
+#MESSAGE( STATUS "SECUREMEM_LIB: " ${CMAKE_CURRENT_SOURCE_DIR}/external/securememory_bin/bin )
+find_library(SECUREMEM_LIB SecureMemory ${CMAKE_CURRENT_SOURCE_DIR}/external/securememory_bin/bin)
 
 # require and enable c++14 support
 set_target_properties(cryptosqlite PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
@@ -48,9 +54,9 @@ target_compile_options(cryptosqlite PRIVATE -Wall)
 
 # link options
 if(WIN32)
-    target_link_libraries(cryptosqlite ${SecureMemoryLib} ws2_32)
+    target_link_libraries(cryptosqlite ${SECUREMEM_LIB} ws2_32)
 else ()
-    target_link_libraries(cryptosqlite ${SecureMemoryLib} )
+    target_link_libraries(cryptosqlite ${SECUREMEM_LIB} )
 endif()
 if (NOT WIN32)
     target_link_libraries(cryptosqlite dl)
