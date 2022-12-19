@@ -84,7 +84,7 @@ int VFS::open(const char *zName, sqlite3_file *pFile, int flags, int *pOutFlags)
                 break;
 
             case SQLITE_OPEN_MAIN_DB:
-                VFS_FORWARD(this, xAccess, zName, SQLITE_ACCESS_EXISTS, &db->mExists);
+                VFS_REAL(this)->xAccess(VFS_REAL(this),zName,SQLITE_ACCESS_EXISTS,&db->mExists);
                 db->mCrypto = new Crypto(db->mFileName, mFileKey, mFileKeySize, db->mExists);
                 break;
 
@@ -104,8 +104,7 @@ int VFS::open(const char *zName, sqlite3_file *pFile, int flags, int *pOutFlags)
                 return SQLITE_ERROR;
         }
     }
-
-    int ret = VFS_FORWARD(this, xOpen, zName, db->mUnderlying, flags, pOutFlags);
+    int ret =  VFS_REAL(this)->xOpen(VFS_REAL(this),zName,db->mUnderlying, flags, pOutFlags);
     if (ret == SQLITE_OK) {
         pFile->pMethods = &File::gSQLiteIOMethods;
 
