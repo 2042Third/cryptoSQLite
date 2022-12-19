@@ -103,7 +103,7 @@ void Crypto::decryptPage(void *pageInOut, uint32_t pageSize, int pageNo) {
 
 void Crypto::decryptFirstPageCache() {
     // fit page buffers to cache or minimum page size if cache empty
-    resizePageBuffers(std::max(mFirstPage.size(), 512u));
+    resizePageBuffers((std::max)(mFirstPage.size(), 512u));
     // decrypt first page from cache or leave 0-bytes if cache empty
     if (mFirstPage.size() > 0) mDataCrypt->decrypt(1, mFirstPage, mPageBufferOut, mKey);
 }
