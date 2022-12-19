@@ -87,55 +87,54 @@ protected:
 namespace {
     #define VFS_REAL(x) reinterpret_cast<VFS *>(x)->underlying()
     #define VFS_FORWARD(f, fn, x...) VFS_REAL(f)->fn(VFS_REAL(f), x)
-    #define VFS_INTERCEPT(f, fn, x...) reinterpret_cast<VFS *>(f)->fn(x)
 
     int sVfsOpen(sqlite3_vfs* pVfs, const char* zName, sqlite3_file* pFile, int flags, int* pOutFlags) {
-        return VFS_INTERCEPT(pVfs, open, zName, pFile, flags, pOutFlags);
+      return reinterpret_cast<VFS *>(pVfs)->open(zName,pFile,flags, pOutFlags);
     }
     int sVfsDelete(sqlite3_vfs* pVfs, const char* zName, int syncDir) {
-        return VFS_FORWARD(pVfs, xDelete, zName, syncDir);
+      return VFS_REAL(pVfs)->xDelete(VFS_REAL(pVfs),zName,syncDir);
     }
     int sVfsAccess(sqlite3_vfs* pVfs, const char* zName, int flags, int* pResOut) {
-        return VFS_FORWARD(pVfs, xAccess, zName, flags, pResOut);
+      return VFS_REAL(pVfs)->xAccess(VFS_REAL(pVfs),zName,flags,pResOut);
     }
     int sVfsFullPathname(sqlite3_vfs* pVfs, const char* zName, int nOut, char* zOut) {
-        return VFS_FORWARD(pVfs, xFullPathname, zName, nOut, zOut);
+      return VFS_REAL(pVfs)->xFullPathname(VFS_REAL(pVfs),zName,nOut,zOut);
     }
     void* sVfsDlOpen(sqlite3_vfs* pVfs, const char* zFilename) {
-        return VFS_FORWARD(pVfs, xDlOpen, zFilename);
+      return VFS_REAL(pVfs)->xDlOpen(VFS_REAL(pVfs),zFilename);
     }
     void sVfsDlError(sqlite3_vfs* pVfs, int nByte, char* zErrMsg) {
-        return VFS_FORWARD(pVfs, xDlError, nByte, zErrMsg);
+      return VFS_REAL(pVfs)->xDlError(VFS_REAL(pVfs),nByte,zErrMsg);
     }
     void (*sVfsDlSym(sqlite3_vfs* pVfs, void* p, const char* zSymbol))(void) {
-        return VFS_FORWARD(pVfs, xDlSym, p, zSymbol);
+      return VFS_REAL(pVfs)->xDlSym(VFS_REAL(pVfs),p,zSymbol);
     }
     void sVfsDlClose(sqlite3_vfs* pVfs, void* p) {
-        return VFS_FORWARD(pVfs, xDlClose, p);
+      return VFS_REAL(pVfs)->xDlClose(VFS_REAL(pVfs),p);
     }
     int sVfsRandomness(sqlite3_vfs* pVfs, int nByte, char* zOut) {
-        return VFS_FORWARD(pVfs, xRandomness, nByte, zOut);
+      return VFS_REAL(pVfs)->xRandomness(VFS_REAL(pVfs),nByte,zOut);
     }
     int sVfsSleep(sqlite3_vfs* pVfs, int microseconds) {
-        return VFS_FORWARD(pVfs, xSleep, microseconds);
+      return VFS_REAL(pVfs)->xSleep(VFS_REAL(pVfs),microseconds);
     }
     int sVfsCurrentTime(sqlite3_vfs* pVfs, double* pOut) {
-        return VFS_FORWARD(pVfs, xCurrentTime, pOut);
+      return VFS_REAL(pVfs)->xCurrentTime(VFS_REAL(pVfs),pOut);
     }
     int sVfsGetLastError(sqlite3_vfs* pVfs, int nErr, char* zOut) {
-        return VFS_FORWARD(pVfs, xGetLastError, nErr, zOut);
+      return VFS_REAL(pVfs)->xGetLastError(VFS_REAL(pVfs),nErr,zOut);
     }
     int sVfsCurrentTimeInt64(sqlite3_vfs* pVfs, sqlite3_int64* pOut) {
-        return VFS_FORWARD(pVfs, xCurrentTimeInt64, pOut);
+      return VFS_REAL(pVfs)->xCurrentTimeInt64(VFS_REAL(pVfs),pOut);
     }
     int sVfsSetSystemCall(sqlite3_vfs* pVfs, const char* zName, sqlite3_syscall_ptr pNewFunc) {
-        return VFS_FORWARD(pVfs, xSetSystemCall, zName, pNewFunc);
+      return VFS_REAL(pVfs)->xSetSystemCall(VFS_REAL(pVfs),zName,pNewFunc);
     }
     sqlite3_syscall_ptr sVfsGetSystemCall(sqlite3_vfs* pVfs, const char* zName) {
-        return VFS_FORWARD(pVfs, xGetSystemCall, zName);
+      return VFS_REAL(pVfs)->xGetSystemCall(VFS_REAL(pVfs),zName);
     }
     const char* sVfsNextSystemCall(sqlite3_vfs* pVfs, const char* zName) {
-        return VFS_FORWARD(pVfs, xNextSystemCall, zName);
+      return VFS_REAL(pVfs)->xNextSystemCall(VFS_REAL(pVfs),zName);
     }
 }
 
