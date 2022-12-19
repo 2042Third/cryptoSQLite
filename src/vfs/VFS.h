@@ -86,7 +86,6 @@ protected:
 
 namespace {
     #define VFS_REAL(x) reinterpret_cast<VFS *>(x)->underlying()
-    #define VFS_FORWARD(f, fn, x...) VFS_REAL(f)->fn(VFS_REAL(f), x)
 
     int sVfsOpen(sqlite3_vfs* pVfs, const char* zName, sqlite3_file* pFile, int flags, int* pOutFlags) {
       return reinterpret_cast<VFS *>(pVfs)->open(zName,pFile,flags, pOutFlags);
