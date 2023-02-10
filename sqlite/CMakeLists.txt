@@ -37,14 +37,14 @@ file(DOWNLOAD
         )
 
 # unpack zip only if needed
-if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${SQLITE_SUBDIR})
-    # unpack the amalgamation zip in current dir
-    execute_process(COMMAND ${CMAKE_COMMAND} -E tar x sqlite.zip
-            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-
-    # apply our patches to sqlite
-    ApplyPatches("${CMAKE_CURRENT_SOURCE_DIR}/patches/*.patch" "${CMAKE_CURRENT_SOURCE_DIR}/${SQLITE_SUBDIR}")
-endif()
+#if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${SQLITE_SUBDIR})
+#    # unpack the amalgamation zip in current dir
+#    execute_process(COMMAND ${CMAKE_COMMAND} -E tar x sqlite.zip
+#            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+#
+#    # apply our patches to sqlite
+#    ApplyPatches("${CMAKE_CURRENT_SOURCE_DIR}/patches/*.patch" "${CMAKE_CURRENT_SOURCE_DIR}/${SQLITE_SUBDIR}")
+#endif()
 
 # find files just downloaded
 file(GLOB_RECURSE SQ_FILES ${CMAKE_CURRENT_SOURCE_DIR}/${SQLITE_SUBDIR}/*)
