@@ -37,9 +37,35 @@ add_subdirectory(sqlite)
 file(GLOB_RECURSE CS_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}/include/* )
 file(GLOB_RECURSE CS_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/* )
 
+
+if (WIN32)
+    set(SECUREMEM_LIB_BUILT ${CMAKE_CURRENT_SOURCE_DIR}/external/securememory/output/win/bin)
+elseif (APPLE)
+    set(SECUREMEM_LIB_BUILT ${CMAKE_CURRENT_SOURCE_DIR}/external/securememory/output/macos/bin)
+else ()
+    set(SECUREMEM_LIB_BUILT ${CMAKE_CURRENT_SOURCE_DIR}/external/securememory/output/linux/bin)
+endif()
+
 # add static library
-find_library(SECUREMEM_LIB SecureMemory ${CMAKE_CURRENT_SOURCE_DIR}/external/securememorybin/bin)
-MESSAGE( STATUS "SECUREMEM_LIB: " ${CMAKE_CURRENT_SOURCE_DIR}/external/securememorybin/bin )
+#find_library(SECUREMEM_LIB SecureMemory  HINTS ${SECUREMEM_LIB_DIR})
+#if (NOT SECUREMEM_LIB)
+##    message(STATUS "SecureMemory library not found. Building it now...")
+##    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/securememory) # build the static library
+##    find_library(SECUREMEM_LIB SecureMemory HINTS ${SECUREMEM_LIB_BUILT}) # find the library again after building
+#    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/securememory) # build the static library
+#    set(SECUREMEM_LIB SecureMemory)
+#else ()
+#    message(STATUS "SecureMemory library found: ${SECUREMEM_LIB}")
+#endif()
+
+find_library(SECUREMEM_LIB SecureMemory PATHS ${SECUREMEM_LIB_BUILT} NO_DEFAULT_PATH)
+
+if (NOT SECUREMEM_LIB)
+    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/securememory) # build the static library
+    set(SECUREMEM_LIB SecureMemory)
+endif()
+
+MESSAGE( STATUS "SECUREMEM_LIB: " ${SECUREMEM_LIB_BUILT})
 MESSAGE( STATUS "SECUREMEM_LIB location: " ${SECUREMEM_LIB} )
 
 # set up library target
@@ -55,7 +81,7 @@ target_compile_options(cryptosqlite PRIVATE -Wall)
 # link options
 if(WIN32)
     target_link_libraries(cryptosqlite
-        ${CMAKE_CURRENT_SOURCE_DIR}/external/securememorybin/bin/libSecureMemory.a
+        ${SECUREMEM_LIB_BUILT}/libSecureMemory.a
         ws2_32)
 else ()
     target_link_libraries(cryptosqlite ${SECUREMEM_LIB} )
