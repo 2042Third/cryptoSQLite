@@ -19,6 +19,25 @@
 # Removed after static bin of securememory
 #include(ApplyPatches)
 
+macro(ApplyPatches patch_glob target_dir)
+    # find all patch files
+    file(GLOB PATCH_FILES ${patch_glob})
+
+    # apply each patch subsequently
+    foreach(PATCH_FILE ${PATCH_FILES})
+        # try to apply the patch
+        execute_process(
+                COMMAND ${PATCH_PROGRAM} -p1 -i ${PATCH_FILE}
+                RESULT_VARIABLE PATCH_RESULT
+                WORKING_DIRECTORY ${target_dir}
+        )
+
+        if (NOT ${PATCH_RESULT} EQUAL "0")
+            message(FATAL_ERROR "Failed to apply patch: ${PATCH_FILE}")
+        endif()
+    endforeach()
+endmacro()
+
 # set up cache variables
 set(SQLITE_BUILD_VERSION "3410100" CACHE STRING "SQLite version string as used in the URL")
 set(SQLITE_BUILD_HASH "df0d54bf246521360c8148f64e7e5ad07a4665b4f902339e844f4c493d535ff5" CACHE STRING
