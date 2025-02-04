@@ -19,6 +19,9 @@
 # Removed after static bin of securememory
 #include(ApplyPatches)
 
+cmake_policy(SET CMP0079 NEW) # allow things from other directories
+cmake_policy(SET CMP0135 NEW) # cryptoSqlite icu download prebuilt binary
+
 # set up cache variables
 set(SQLITE_BUILD_VERSION "3410100" CACHE STRING "SQLite version string as used in the URL")
 set(SQLITE_BUILD_HASH "df0d54bf246521360c8148f64e7e5ad07a4665b4f902339e844f4c493d535ff5" CACHE STRING
@@ -52,3 +55,15 @@ file(GLOB_RECURSE SQ_FILES ${CMAKE_CURRENT_SOURCE_DIR}/${SQLITE_SUBDIR}/*)
 # export variables to parent scope
 set(SQLITE_FILES SQ_FILES PARENT_SCOPE)
 set(SQLITE_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}/${SQLITE_SUBDIR}/ PARENT_SCOPE)
+
+# Add SQLite source directly to parent scope
+set(SQLITE_SOURCE
+    ${CMAKE_CURRENT_SOURCE_DIR}/${SQLITE_SUBDIR}/sqlite3.c
+    PARENT_SCOPE
+)
+
+set(SQLITE_INCLUDES
+    ${CMAKE_CURRENT_SOURCE_DIR}/${SQLITE_SUBDIR}
+    PARENT_SCOPE
+)
+

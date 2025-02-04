@@ -17,8 +17,8 @@
  * along with cryptoSQLite.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// must be first include
 #include <sqlite3.c>
+// Then include headers
 #include "csqlite.h"
 
 struct sqlite3_mutex *csqlite3_get_mutex(struct sqlite3 *db) {
