@@ -20,7 +20,7 @@
 #include(ApplyPatches)
 
 cmake_policy(SET CMP0079 NEW) # allow things from other directories
-cmake_policy(SET CMP0135 NEW) # cryptoSqlite icu download prebuilt binary
+#cmake_policy(SET CMP0135 NEW) # cryptoSqlite icu download prebuilt binary
 
 # set up cache variables
 set(SQLITE_BUILD_VERSION "3410100" CACHE STRING "SQLite version string as used in the URL")

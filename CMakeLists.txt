@@ -69,7 +69,7 @@ endif()
 find_library(SECUREMEM_LIB SecureMemory PATHS ${SECUREMEM_LIB_BUILT} NO_DEFAULT_PATH)
 
 if (NOT SECUREMEM_LIB)
-    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/securememory) # build the static library
+    #add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/securememory) # build the static library
     set(SECUREMEM_LIB SecureMemory)
 endif()
 
