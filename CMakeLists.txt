@@ -61,6 +61,8 @@ endif()
 
 # SQLite compile definitions
 target_compile_definitions(cryptosqlite PUBLIC
+        -DSQLITE_HAS_CODEC
+        -DSQLITE_ENABLE_VFS
         -DSQLITE_THREADSAFE=1
         -DSQLITE_DEFAULT_MEMSTATUS=0
         -DSQLITE_TEMP_STORE=3

@@ -59,23 +59,121 @@ void Crypto::unwrapKey(const void *fileKey, int keylen) {
 }
 
 void Crypto::writeKeyFile() {
-    Buffer content;
-    mWrappedKey.serializeAppend(content);
-    mFirstPage.serializeAppend(content);
+    // std::cout << "=== Writing Keyfile (Secure) ===" << std::endl;
 
-    FileWrapper keyfile(mFileName);
-    keyfile.writeFile(content);
+    // Prepare temporary buffer with secure cleanup
+    struct SecureBuffer {
+        uint8_t* data;
+        size_t size;
+
+        explicit SecureBuffer(size_t s) : data(new uint8_t[s]), size(s) {}
+        ~SecureBuffer() {
+            if (data) {
+                // Secure wipe
+                for(size_t i = 0; i < size; i++)
+                    data[i] = 0;
+                delete[] data;
+            }
+        }
+    };
+
+    try {
+        FILE* file = fopen(mFileName.c_str(), "wb");
+        if (!file) throw std::runtime_error("Failed to open keyfile");
+
+        // Write wrapped key with secure handling
+        {
+            uint32_t keySize = mWrappedKey.size();
+            SecureBuffer tempBuf(keySize);
+            memcpy(tempBuf.data, mWrappedKey.const_data(), keySize);
+
+            fwrite(&keySize, sizeof(keySize), 1, file);
+            fwrite(tempBuf.data, 1, keySize, file);
+        }
+
+        // Write first page with secure handling
+        {
+            uint32_t pageSize = mFirstPage.size();
+            if (pageSize > 0) {
+                SecureBuffer tempBuf(pageSize);
+                memcpy(tempBuf.data, mFirstPage.const_data(), pageSize);
+
+                fwrite(&pageSize, sizeof(pageSize), 1, file);
+                fwrite(tempBuf.data, 1, pageSize, file);
+            }
+        }
+
+        fflush(file);
+        fclose(file);
+        // std::cout << "Keyfile written successfully" << std::endl;
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Error writing keyfile: " << e.what() << std::endl;
+        throw;
+    }
 }
+
 
 void Crypto::readKeyFile() {
-    Buffer content;
-    FileWrapper keyfile(mFileName);
-    keyfile.readFile(content);
+    // Prepare temporary buffer with secure cleanup
+    struct SecureBuffer {
+        uint8_t* data;
+        size_t size;
 
-    BufferRangeConst chain(content);
-    mWrappedKey.deserialize(chain);
-    mFirstPage.deserialize(chain);
+        explicit SecureBuffer(size_t s) : data(new uint8_t[s]), size(s) {}
+        ~SecureBuffer() {
+            if (data) {
+                // Secure wipe
+                for(size_t i = 0; i < size; i++)
+                    data[i] = 0;
+                delete[] data;
+            }
+        }
+    };
+
+    // std::cout << "=== Reading Keyfile (Secure) ===" << std::endl;
+
+    try {
+        FILE* file = fopen(mFileName.c_str(), "rb");
+        if (!file) throw std::runtime_error("Failed to open keyfile");
+
+        // Read wrapped key
+        uint32_t keySize;
+        if (fread(&keySize, sizeof(keySize), 1, file) != 1)
+            throw std::runtime_error("Failed to read key size");
+
+        {
+            SecureBuffer tempBuf(keySize);
+            if (fread(tempBuf.data, 1, keySize, file) != keySize)
+                throw std::runtime_error("Failed to read key data");
+
+            mWrappedKey.clear();
+            mWrappedKey.write(tempBuf.data, keySize, 0);
+        }
+
+        // Read first page
+        uint32_t pageSize;
+        if (fread(&pageSize, sizeof(pageSize), 1, file) != 1)
+            throw std::runtime_error("Failed to read page size");
+
+        if (pageSize > 0) {
+            SecureBuffer tempBuf(pageSize);
+            if (fread(tempBuf.data, 1, pageSize, file) != pageSize)
+                throw std::runtime_error("Failed to read page data");
+
+            mFirstPage.clear();
+            mFirstPage.write(tempBuf.data, pageSize, 0);
+        }
+
+        fclose(file);
+        // std::cout << "Keyfile read successfully" << std::endl;
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Error reading keyfile: " << e.what() << std::endl;
+        throw;
+    }
 }
+
 
 const void *Crypto::encryptPage(const void *page, uint32_t pageSize, int pageNo) {
     // copy plaintext to input buffer
