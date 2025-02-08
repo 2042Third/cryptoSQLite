@@ -1,69 +1,42 @@
-# Copyright (c) 2017-2023 The ViaDuck Project
-#
-# This file is part of cryptoSQLite.
-#
-# cryptoSQLite is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# cryptoSQLite is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with cryptoSQLite.  If not, see <http://www.gnu.org/licenses/>.
-#
+# lib/cryptoSQLite/sqlite/CMakeLists.txt
 
-# Removed after static bin of securememory
-#include(ApplyPatches)
-
-cmake_policy(SET CMP0079 NEW) # allow things from other directories
-#cmake_policy(SET CMP0135 NEW) # cryptoSqlite icu download prebuilt binary
+cmake_minimum_required(VERSION 3.18)
 
 # set up cache variables
-set(SQLITE_BUILD_VERSION "3410100" CACHE STRING "SQLite version string as used in the URL")
-set(SQLITE_BUILD_HASH "df0d54bf246521360c8148f64e7e5ad07a4665b4f902339e844f4c493d535ff5" CACHE STRING
+set(SQLITE_BUILD_VERSION "3480000" CACHE STRING "SQLite version string as used in the URL")
+set(SQLITE_BUILD_HASH "d9a15a42db7c78f88fe3d3c5945acce2f4bfe9e4da9f685cd19f6ea1d40aa884" CACHE STRING
         "SQLite amalgamation zip sha256 hash used to check the download")
 
 # build url from cache variables
 set(SQLITE_URL "https://mirror.viaduck.org/sqlite/sqlite-amalgamation-${SQLITE_BUILD_VERSION}.zip")
-set(SQLITE_SUBDIR "sqlite-amalgamation-${SQLITE_BUILD_VERSION}")
+set(SQLITE_SUBDIR "${CMAKE_CURRENT_SOURCE_DIR}/sqlite-amalgamation-${SQLITE_BUILD_VERSION}")
 
-# download amalgamation zip with hash check
-file(DOWNLOAD
-        ${SQLITE_URL}
-        ${CMAKE_CURRENT_SOURCE_DIR}/sqlite.zip
-        EXPECTED_HASH SHA256=${SQLITE_BUILD_HASH}
-        SHOW_PROGRESS
+# download amalgamation zip with hash check if needed
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/sqlite.zip")
+        file(DOWNLOAD
+                ${SQLITE_URL}
+                ${CMAKE_CURRENT_SOURCE_DIR}/sqlite.zip
+                EXPECTED_HASH SHA256=${SQLITE_BUILD_HASH}
+                SHOW_PROGRESS
         )
+endif()
 
 # unpack zip only if needed
-#if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${SQLITE_SUBDIR})
-#    # unpack the amalgamation zip in current dir
-#    execute_process(COMMAND ${CMAKE_COMMAND} -E tar x sqlite.zip
-#            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-#
-#    # apply our patches to sqlite
-#    ApplyPatches("${CMAKE_CURRENT_SOURCE_DIR}/patches/*.patch" "${CMAKE_CURRENT_SOURCE_DIR}/${SQLITE_SUBDIR}")
-#endif()
+if(NOT EXISTS ${SQLITE_SUBDIR})
+        file(ARCHIVE_EXTRACT
+                INPUT ${CMAKE_CURRENT_SOURCE_DIR}/sqlite.zip
+                DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}
+        )
+endif()
 
-# find files just downloaded
-file(GLOB_RECURSE SQ_FILES ${CMAKE_CURRENT_SOURCE_DIR}/${SQLITE_SUBDIR}/*)
+# Create SQLite library
+add_library(sqlite3 STATIC "${SQLITE_SUBDIR}/sqlite3.c")
 
-# export variables to parent scope
-set(SQLITE_FILES SQ_FILES PARENT_SCOPE)
-set(SQLITE_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}/${SQLITE_SUBDIR}/ PARENT_SCOPE)
-
-# Add SQLite source directly to parent scope
-set(SQLITE_SOURCE
-    ${CMAKE_CURRENT_SOURCE_DIR}/${SQLITE_SUBDIR}/sqlite3.c
-    PARENT_SCOPE
+target_include_directories(sqlite3 PUBLIC
+        $<BUILD_INTERFACE:${SQLITE_SUBDIR}>
+        $<INSTALL_INTERFACE:include>
 )
 
-set(SQLITE_INCLUDES
-    ${CMAKE_CURRENT_SOURCE_DIR}/${SQLITE_SUBDIR}
-    PARENT_SCOPE
-)
-
+# Export variables to parent scope
+set(SQLITE_INCLUDE_DIRS ${SQLITE_SUBDIR} PARENT_SCOPE)
+set(SQLITE_SOURCE "${SQLITE_SUBDIR}/sqlite3.c" PARENT_SCOPE)

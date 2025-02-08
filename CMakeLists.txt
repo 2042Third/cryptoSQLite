@@ -16,146 +16,83 @@
 # along with cryptoSQLite.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.18)
 project(cryptoSQLite)
 
-# set cmake module path
-#list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/external/securememory/cmake-modules")
-
-# add sqlite amalgamation subdirectory and tests
+# add sqlite amalgamation subdirectory
 add_subdirectory(sqlite)
-#add_subdirectory(test)
 
-# Simplified SecureMemory inclusion -----------------------------
-if(NOT TARGET SecureMemory)
+# Add SecureMemory dependency
+if(NOT TARGET secure_memory)
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/securememory)
 endif()
-# --------------------------------------------------------------
-
-# Get definitions of "SECUREMEM_LIB" and "SecureMemoryInclude"
-#add_subdirectory(external/securememorybin)
-
-#if (NOT TARGET icu)
-#    add_subdirectory(external/icu-cmake)
-#endif()
 
 # glob files
-file(GLOB_RECURSE CS_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}/include/* )
-file(GLOB_RECURSE CS_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/*
-)
-
-
-if (WIN32)
-    set(SECUREMEM_LIB_BUILT ${CMAKE_CURRENT_SOURCE_DIR}/external/securememory/output/win/bin)
-elseif (APPLE)
-    set(SECUREMEM_LIB_BUILT ${CMAKE_CURRENT_SOURCE_DIR}/external/securememory/output/macos/bin)
-else ()
-    set(SECUREMEM_LIB_BUILT ${CMAKE_CURRENT_SOURCE_DIR}/external/securememory/output/linux/bin)
-endif()
-
-# add static library
-#find_library(SECUREMEM_LIB SecureMemory  HINTS ${SECUREMEM_LIB_DIR})
-#if (NOT SECUREMEM_LIB)
-##    message(STATUS "SecureMemory library not found. Building it now...")
-##    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/securememory) # build the static library
-##    find_library(SECUREMEM_LIB SecureMemory HINTS ${SECUREMEM_LIB_BUILT}) # find the library again after building
-#    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/securememory) # build the static library
-#    set(SECUREMEM_LIB SecureMemory)
-#else ()
-#    message(STATUS "SecureMemory library found: ${SECUREMEM_LIB}")
-#endif()
-
-find_library(SECUREMEM_LIB SecureMemory PATHS ${SECUREMEM_LIB_BUILT} NO_DEFAULT_PATH)
-
-if (NOT SECUREMEM_LIB)
-    #add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/securememory) # build the static library
-    set(SECUREMEM_LIB SecureMemory)
-endif()
-
-MESSAGE( STATUS "SECUREMEM_LIB: " ${SECUREMEM_LIB_BUILT})
-MESSAGE( STATUS "SECUREMEM_LIB location: " ${SECUREMEM_LIB} )
+file(GLOB_RECURSE CS_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}/include/*)
+file(GLOB_RECURSE CS_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/*)
 
 # Create cryptosqlite target with merged sources
 add_library(cryptosqlite SHARED ${CS_SOURCES})
 
 # require and enable c++14 support
-set_target_properties(cryptosqlite PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
+set_target_properties(cryptosqlite PROPERTIES CXX_STANDARD 20 CXX_STANDARD_REQUIRED YES)
 
 # compile options
 target_compile_options(cryptosqlite PRIVATE -Wall)
 
-# Modern target-based linking -----------------------------------
+target_include_directories(cryptosqlite
+        PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+        PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/external/securememory/include
+        ${SQLITE_INCLUDE_DIRS}
+)
+
+# Modern target-based linking
 target_link_libraries(cryptosqlite PRIVATE
-    SecureMemory
-    ${CMAKE_DL_LIBS}
+        secure_memory
+        sqlite3
+        ${CMAKE_DL_LIBS}
 )
 if(WIN32)
     target_link_libraries(cryptosqlite PRIVATE ws2_32)
 endif()
-# --------------------------------------------------------------
 
-# add compile definitions to match this specific use case
+# SQLite compile definitions
 target_compile_definitions(cryptosqlite PUBLIC
-    # Serialized -> free to use same connection/statement in different threads
-    -DSQLITE_THREADSAFE=1
-    # No need for another memory watcher
-    -DSQLITE_DEFAULT_MEMSTATUS=0
-    # Always use memory for temporary files
-    -DSQLITE_TEMP_STORE=3
-    # Use the new write ahead logging
-    -DSQLITE_DEFAULT_WAL_SYNCHRONOUS=1
-    # Do not allow searching in BLOBs by using LIKE or GLOB.
-    -DSQLITE_LIKE_DOESNT_MATCH_BLOBS=1
-    # We don't need checking the depth of the expression tree as queries won't be that complex.
-    -DSQLITE_MAX_EXPR_DEPTH=0
-    # Do not use any deprecated features as deprecated is not so good.
-    -DSQLITE_OMIT_DEPRECATED=1
-    # Since we are using sqlite async, we do not need this
-    -DSQLITE_OMIT_PROGRESS_CALLBACK=1
-    # Using this is supported on all platforms we care about and improves VFS performance
-    -DHAVE_FDATASYNC
-    # Use perfomant isnan system version
-    -DHAVE_ISNAN
-    # Use interface to get malloc available size
-    -DHAVE_MALLOC_USABLE_SIZE
-    # Readable and writeable by user only
-    -DSQLITE_DEFAULT_FILE_PERMISSIONS=0600
-    # Hardening always makes sense.
-    -DSQLITE_ENABLE_API_ARMOR
-    # Full text search
-    -DSQLITE_ENABLE_FTS4
-    -DSQLITE_ENABLE_FTS5
-    # Unicode support for strings in comparators
-    #        -DSQLITE_ENABLE_ICU
-    # Enable JSON extension support
-    -DSQLITE_ENABLE_JSON1
-    )
+        -DSQLITE_THREADSAFE=1
+        -DSQLITE_DEFAULT_MEMSTATUS=0
+        -DSQLITE_TEMP_STORE=3
+        -DSQLITE_DEFAULT_WAL_SYNCHRONOUS=1
+        -DSQLITE_LIKE_DOESNT_MATCH_BLOBS=1
+        -DSQLITE_MAX_EXPR_DEPTH=0
+        -DSQLITE_OMIT_DEPRECATED=1
+        -DSQLITE_OMIT_PROGRESS_CALLBACK=1
+        -DHAVE_FDATASYNC
+        -DHAVE_ISNAN
+        -DHAVE_MALLOC_USABLE_SIZE
+        -DSQLITE_DEFAULT_FILE_PERMISSIONS=0600
+        -DSQLITE_ENABLE_API_ARMOR
+        -DSQLITE_ENABLE_FTS4
+        -DSQLITE_ENABLE_FTS5
+        -DSQLITE_ENABLE_JSON1
+)
 
-if (WIN32)
+if(WIN32)
     target_compile_definitions(cryptosqlite PUBLIC
-        # Required due to unix having 8-byte boundaries.
-        -DSQLITE_4_BYTE_ALIGNED_MALLOC=1
-        )
+            -DSQLITE_4_BYTE_ALIGNED_MALLOC=1
+    )
 else()
     target_compile_definitions(cryptosqlite PUBLIC
-        # Use threadsafe localtime
-        -DHAVE_LOCALTIME_R
-        )
+            -DHAVE_LOCALTIME_R
+    )
 endif()
 
-
-# Add compile definitions for SQLite implementation
+# SQLite implementation definitions
 target_compile_definitions(cryptosqlite PRIVATE
-    SQLITE_ENABLE_BTREE  # Example definition needed for Btree functions
-    SQLITE_CORE
-    SQLITE_PRIVATE=
-)
-# export includes to other targets
-# Set include directories
-target_include_directories(cryptosqlite PUBLIC
-    ${SQLITE_INCLUDES}
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external/securememory/include>
+        SQLITE_ENABLE_BTREE
+        SQLITE_CORE
+        SQLITE_PRIVATE=
 )
 
